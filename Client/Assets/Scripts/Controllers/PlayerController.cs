@@ -6,7 +6,6 @@ using static Define;
 
 public class PlayerController : MonoBehaviour
 {
-    public Grid grid;
     public float speed = 5.0f;
 
     Vector3Int cellPosition = Vector3Int.zero;
@@ -73,15 +72,21 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         anim = GetComponent<Animator>();
-        Vector3 _pos = grid.CellToWorld(cellPosition);
+        Vector3 _pos = Managers.Map.CurrentGrid.CellToWorld(cellPosition) + new Vector3(0.5f, 0.5f, 0);
         transform.position = _pos;
     }
 
-    void Update()
+    private void Update()
     {
         GetDirInput();
         UpdatePosition();
         UpdateMoving();
+    }
+
+    private void LateUpdate()
+    {
+
+        Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, -10);
     }
 
     // 키보드 입력
@@ -112,26 +117,29 @@ public class PlayerController : MonoBehaviour
     // 실질적인 이동
     private void UpdateMoving()
     {
-        if (!isMoving)
+        if (!isMoving && dir != MoveDirection.None)
         {
+            Vector3Int destPos = cellPosition;
             switch (dir)
             {
                 case MoveDirection.Up:
-                    cellPosition += Vector3Int.up;
-                    isMoving = true;
+                    destPos += Vector3Int.up;
                     break;
                 case MoveDirection.Down:
-                    cellPosition += Vector3Int.down;
-                    isMoving = true;
+                    destPos += Vector3Int.down;
                     break;
                 case MoveDirection.Left:
-                    cellPosition += Vector3Int.left;
-                    isMoving = true;
+                    destPos += Vector3Int.left;
                     break;
                 case MoveDirection.Right:
-                    cellPosition += Vector3Int.right;
-                    isMoving = true;
+                    destPos += Vector3Int.right;
                     break;
+            }
+
+            if (Managers.Map.CanGo(destPos))
+            {
+                cellPosition = destPos;
+                isMoving = true;
             }
         }
     }
@@ -141,7 +149,7 @@ public class PlayerController : MonoBehaviour
         if (!isMoving)
             return;
 
-        Vector3 _desPos = grid.CellToWorld(cellPosition);
+        Vector3 _desPos = Managers.Map.CurrentGrid.CellToWorld(cellPosition) + new Vector3(0.5f, 0.5f, 0);
         Vector3 _moveDir = _desPos - transform.position;
 
         // 도착 여부 체크

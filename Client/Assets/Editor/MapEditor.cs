@@ -25,21 +25,23 @@ public class MapEditor
         {
             string _mapName = _gameoObjects[i].name;
             string _collisionName = "Tilemap_Collision";
+            string _baseMapName = "Tilemap_Base";
             // Extract the collision tilemap from the map grid.
+            Tilemap _tileMapBase = Util.FindChild<Tilemap>(_gameoObjects[i], _baseMapName, true);
             Tilemap _tileMap = Util.FindChild<Tilemap>(_gameoObjects[i], _collisionName, true);
 
             // Create a file with the collision coordinates to send to the server.
             using (var writer = File.CreateText($"Assets/Resources/Map/{_mapName}.txt"))
             {
                 // Minimam and maximam size of Map
-                writer.WriteLine(_tileMap.cellBounds.xMin);
-                writer.WriteLine(_tileMap.cellBounds.xMax);
-                writer.WriteLine(_tileMap.cellBounds.yMin);
-                writer.WriteLine(_tileMap.cellBounds.yMax);
+                writer.WriteLine(_tileMapBase.cellBounds.xMin);
+                writer.WriteLine(_tileMapBase.cellBounds.xMax);
+                writer.WriteLine(_tileMapBase.cellBounds.yMin);
+                writer.WriteLine(_tileMapBase.cellBounds.yMax);
 
-                for (int y = _tileMap.cellBounds.yMax; y >= _tileMap.cellBounds.yMin; y--)
+                for (int y = _tileMapBase.cellBounds.yMax; y >= _tileMapBase.cellBounds.yMin; y--)
                 {
-                    for (int x = _tileMap.cellBounds.xMin; x <= _tileMap.cellBounds.xMax; x++)
+                    for (int x = _tileMapBase.cellBounds.xMin; x <= _tileMapBase.cellBounds.xMax; x++)
                     {
                         TileBase _tile = _tileMap.GetTile(new Vector3Int(x, y, 0));
                         if (_tile != null)
