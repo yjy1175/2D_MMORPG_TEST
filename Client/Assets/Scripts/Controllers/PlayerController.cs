@@ -4,89 +4,128 @@ using System.Collections.Generic;
 using UnityEngine;
 using static Define;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : CreatureController
 {
-    public float speed = 5.0f;
-
-    Vector3Int cellPosition = Vector3Int.zero;
-
-    MoveDirection dir = MoveDirection.Down;
-    bool isMoving = false;
-
-    Animator anim;
-
-    public MoveDirection Dir
+    Coroutine coSkill;
+    bool rangeSkill = false;
+    protected override void Init()
     {
-        get { return dir; }
-        set 
+        base.Init();
+    }
+
+    protected override void UpdateController()
+    {
+        switch (State)
         {
-            if (dir == value)
-                return;
-
-            switch (value)
-            {
-                case MoveDirection.Up:
-                    anim.Play("walk_back");
-                    transform.localScale = new Vector3(1f, 1f, 1f);
-                    break;
-                case MoveDirection.Down:
-                    anim.Play("walk_front");
-                    transform.localScale = new Vector3(1f, 1f, 1f);
-                    break;
-                case MoveDirection.Left:
-                    transform.localScale = new Vector3(-1f, 1f, 1f);
-                    anim.Play("walk_side");
-                    break;
-                case MoveDirection.Right:
-                    anim.Play("walk_side");
-                    transform.localScale = new Vector3(1f, 1f, 1f);
-                    break;
-                case MoveDirection.None:
-                    if (dir == MoveDirection.Up)
-                    {
-                        anim.Play("idle_back");
-                        transform.localScale = new Vector3(1f, 1f, 1f);
-                    } 
-                    else if (dir == MoveDirection.Down)
-                    {
-                        anim.Play("idle_front");
-                        transform.localScale = new Vector3(1f, 1f, 1f);
-                    }
-                        
-                    else if(dir == MoveDirection.Left)
-                    {
-                        anim.Play("idle_side");
-                        transform.localScale = new Vector3(-1f, 1f, 1f);
-                    }   
-                    else
-                    {
-                        anim.Play("idle_side");
-                        transform.localScale = new Vector3(1f, 1f, 1f);
-                    }
-                    break;
-            }
-
-            dir = value;
+            case CreatureState.Idle:
+                GetDirInput();
+                break;
+            case CreatureState.Moving:
+                GetDirInput();
+                break;
         }
-    }
-    void Start()
-    {
-        anim = GetComponent<Animator>();
-        Vector3 _pos = Managers.Map.CurrentGrid.CellToWorld(cellPosition) + new Vector3(0.5f, 0.5f, 0);
-        transform.position = _pos;
-    }
-
-    private void Update()
-    {
-        GetDirInput();
-        UpdatePosition();
-        UpdateMoving();
+        
+        base.UpdateController();
     }
 
     private void LateUpdate()
     {
 
         Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, -10);
+    }
+
+    protected override void UpdateIdle()
+    {
+        if(Dir != MoveDirection.None)
+        {
+            State = CreatureState.Moving;
+            return;
+        }
+
+        if (Input.GetKey(KeyCode.LeftControl))
+        {
+            State = CreatureState.Skill;
+            coSkill = StartCoroutine("CoStartPunch");
+        }
+        else if (Input.GetKey(KeyCode.LeftShift))
+        {
+            State = CreatureState.Skill;
+            coSkill = StartCoroutine("CoStartShootArrow");
+        }
+    }
+
+    protected override void UpdateAnimation()
+    {
+        if (state == CreatureState.Idle)
+        {
+            switch (lastDir)
+            {
+                case MoveDirection.Up:
+                    anim.Play("idle_back");
+                    sprite.flipX = false;
+                    break;
+                case MoveDirection.Down:
+                    anim.Play("idle_front");
+                    sprite.flipX = false;
+                    break;
+                case MoveDirection.Left:
+                    anim.Play("idle_side");
+                    sprite.flipX = true;
+                    break;
+                case MoveDirection.Right:
+                    anim.Play("idle_side");
+                    sprite.flipX = false;
+                    break;
+            }
+        }
+        else if (state == CreatureState.Moving)
+        {
+            switch (dir)
+            {
+                case MoveDirection.Up:
+                    anim.Play("walk_back");
+                    sprite.flipX = false;
+                    break;
+                case MoveDirection.Down:
+                    anim.Play("walk_front");
+                    sprite.flipX = false;
+                    break;
+                case MoveDirection.Left:
+                    sprite.flipX = true;
+                    anim.Play("walk_side");
+                    break;
+                case MoveDirection.Right:
+                    anim.Play("walk_side");
+                    sprite.flipX = false;
+                    break;
+            }
+        }
+        else if (state == CreatureState.Skill)
+        {
+            switch (lastDir)
+            {
+                case MoveDirection.Up:
+                    anim.Play(rangeSkill ? "attack_weapon_back" : "attack_back");
+                    sprite.flipX = false;
+                    break;
+                case MoveDirection.Down:
+                    anim.Play(rangeSkill ? "attack_weapon_front" : "attack_front");
+                    sprite.flipX = false;
+                    break;
+                case MoveDirection.Left:
+                    sprite.flipX = true;
+                    anim.Play(rangeSkill ? "attack_weapon_side" : "attack_side");
+                    break;
+                case MoveDirection.Right:
+                    anim.Play(rangeSkill ? "attack_weapon_side" : "attack_side");
+                    sprite.flipX = false;
+                    break;
+            }
+        }
+        else
+        {
+
+        }
     }
 
     // 키보드 입력
@@ -112,58 +151,45 @@ public class PlayerController : MonoBehaviour
         {
             Dir = MoveDirection.None;
         }
-
     }
-    // 실질적인 이동
-    private void UpdateMoving()
+
+    IEnumerator CoStartPunch()
     {
-        if (!isMoving && dir != MoveDirection.None)
+        // 피격판정
+        List<GameObject> _gos = Managers.Obj.Find(GetFrontCellPosition(1, 1));
+        if (_gos.Count != 0)
         {
-            Vector3Int destPos = cellPosition;
-            switch (dir)
+            foreach(GameObject go in _gos)
             {
-                case MoveDirection.Up:
-                    destPos += Vector3Int.up;
-                    break;
-                case MoveDirection.Down:
-                    destPos += Vector3Int.down;
-                    break;
-                case MoveDirection.Left:
-                    destPos += Vector3Int.left;
-                    break;
-                case MoveDirection.Right:
-                    destPos += Vector3Int.right;
-                    break;
-            }
-
-            if (Managers.Map.CanGo(destPos))
-            {
-                cellPosition = destPos;
-                isMoving = true;
-            }
+                CreatureController _cc = go.GetComponent<CreatureController>();
+                if (_cc != null)
+                    _cc.OnDamaged();
+            }   
         }
+        // 대기시간
+        rangeSkill = false;
+        yield return new WaitForSeconds(0.5f);
+        State = CreatureState.Idle;
+        coSkill = null;
     }
-    // 이동 가능할 상태일때, 실제 좌표로 이동한다.
-    private void UpdatePosition()
+
+    IEnumerator CoStartShootArrow()
     {
-        if (!isMoving)
-            return;
+        // 화살 발사
+        GameObject _go = Managers.Resource.Instantiate("Creature/Arrow");
+        ArrowController _ac = _go.GetComponent<ArrowController>();
+        _ac.Dir = lastDir;
+        _ac.CellPosition = CellPosition;
 
-        Vector3 _desPos = Managers.Map.CurrentGrid.CellToWorld(cellPosition) + new Vector3(0.5f, 0.5f, 0);
-        Vector3 _moveDir = _desPos - transform.position;
-
-        // 도착 여부 체크
-        float _dist = _moveDir.magnitude;
-        if(_dist < speed * Time.deltaTime)
-        {
-            transform.position = _desPos;
-            isMoving = false;
-        }
-        else
-        {
-            transform.position += _moveDir.normalized * speed * Time.deltaTime;
-            isMoving = true;
-        }
+        // 대기시간
+        rangeSkill = true;
+        yield return new WaitForSeconds(0.3f);
+        State = CreatureState.Idle;
+        coSkill = null;
     }
 
+    public override void OnDamaged()
+    {
+        Debug.Log("Player Hit!");
+    }
 }
