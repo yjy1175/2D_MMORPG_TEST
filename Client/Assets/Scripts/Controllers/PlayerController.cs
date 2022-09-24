@@ -6,32 +6,16 @@ using static Define;
 
 public class PlayerController : CreatureController
 {
-    Coroutine coSkill;
-    bool rangeSkill = false;
+    protected Coroutine coSkill;
+    protected bool rangeSkill = false;
     protected override void Init()
     {
         base.Init();
     }
 
     protected override void UpdateController()
-    {
-        switch (State)
-        {
-            case CreatureState.Idle:
-                GetDirInput();
-                break;
-            case CreatureState.Moving:
-                GetDirInput();
-                break;
-        }
-        
+    {   
         base.UpdateController();
-    }
-
-    private void LateUpdate()
-    {
-
-        Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, -10);
     }
 
     protected override void UpdateIdle()
@@ -40,17 +24,6 @@ public class PlayerController : CreatureController
         {
             State = CreatureState.Moving;
             return;
-        }
-
-        if (Input.GetKey(KeyCode.LeftControl))
-        {
-            State = CreatureState.Skill;
-            coSkill = StartCoroutine("CoStartPunch");
-        }
-        else if (Input.GetKey(KeyCode.LeftShift))
-        {
-            State = CreatureState.Skill;
-            coSkill = StartCoroutine("CoStartShootArrow");
         }
     }
 
@@ -128,30 +101,6 @@ public class PlayerController : CreatureController
         }
     }
 
-    // 키보드 입력
-    private void GetDirInput()
-    {
-        if (Input.GetKey(KeyCode.UpArrow))
-        {
-            Dir = MoveDirection.Up;
-        }
-        else if (Input.GetKey(KeyCode.DownArrow))
-        {
-            Dir = MoveDirection.Down;
-        }
-        else if (Input.GetKey(KeyCode.LeftArrow))
-        {
-            Dir = MoveDirection.Left;
-        }
-        else if (Input.GetKey(KeyCode.RightArrow))
-        {
-            Dir = MoveDirection.Right;
-        }
-        else
-        {
-            Dir = MoveDirection.None;
-        }
-    }
 
     IEnumerator CoStartPunch()
     {
