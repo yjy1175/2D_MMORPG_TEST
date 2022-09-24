@@ -46,7 +46,7 @@ public class MonsterController : CreatureController
         base.Init();
 
         State = CreatureState.Idle;
-        Dir = MoveDirection.None;
+        Dir = MoveDirection.Down;
         speed = 3f;
         rangeSkill = Random.Range(0, 2) == 0 ? true : false;
 
@@ -201,7 +201,7 @@ public class MonsterController : CreatureController
         // 화살 발사
         GameObject _go = Managers.Resource.Instantiate("Creature/Arrow");
         ArrowController _ac = _go.GetComponent<ArrowController>();
-        _ac.Dir = lastDir;
+        _ac.Dir = Dir;
         _ac.CellPosition = CellPosition;
 
         // 대기시간

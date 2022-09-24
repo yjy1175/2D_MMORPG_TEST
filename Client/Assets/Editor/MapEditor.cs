@@ -17,11 +17,17 @@ public class MapEditor
     [MenuItem("Tools/GenerateMap")]
     private static void GenerateMap()
     {
+        GenerateByPath("Assets/Resources/Map/");
+        GenerateByPath("../Common/MapData/");
+    }
+
+    private static void GenerateByPath(string pathPrefix)
+    {
         GameObject[] _gameoObjects = Resources.LoadAll<GameObject>("Prefabs/Map");
         if (_gameoObjects.Length == 0)
             return;
 
-        for(int i = 0; i < _gameoObjects.Length; i++)
+        for (int i = 0; i < _gameoObjects.Length; i++)
         {
             string _mapName = _gameoObjects[i].name;
             string _collisionName = "Tilemap_Collision";
@@ -31,7 +37,7 @@ public class MapEditor
             Tilemap _tileMap = Util.FindChild<Tilemap>(_gameoObjects[i], _collisionName, true);
 
             // Create a file with the collision coordinates to send to the server.
-            using (var writer = File.CreateText($"Assets/Resources/Map/{_mapName}.txt"))
+            using (var writer = File.CreateText($"{pathPrefix}{_mapName}.txt"))
             {
                 // Minimam and maximam size of Map
                 writer.WriteLine(_tileMapBase.cellBounds.xMin);
@@ -55,7 +61,6 @@ public class MapEditor
                 Debug.Log($"Completed [{_mapName}] information file!!");
             }
         }
-
     }
 
 

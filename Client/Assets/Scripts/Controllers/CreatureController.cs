@@ -26,6 +26,12 @@ public class CreatureController : MonoBehaviour
         }
     }
 
+    public void SyncPos()
+    {
+        Vector3 _desPos = Managers.Map.CurrentGrid.CellToWorld(CellPosition) + new Vector3(0.5f, 0.5f, 0);
+        transform.position = _desPos;
+    }
+
     public Vector3Int CellPosition 
     {
         get
@@ -59,7 +65,6 @@ public class CreatureController : MonoBehaviour
         }
     }
 
-    protected MoveDirection lastDir = MoveDirection.Down;
     public MoveDirection Dir
     {
         get { return PosInfo.MoveDir; }
@@ -68,8 +73,6 @@ public class CreatureController : MonoBehaviour
             if (PosInfo.MoveDir == value)
                 return;
             PosInfo.MoveDir = value;
-            if (value != MoveDirection.None)
-                lastDir = value;
 
             UpdateAnimation();
             updated = true;
@@ -84,10 +87,8 @@ public class CreatureController : MonoBehaviour
             return MoveDirection.Left;
         else if (dir.y > 0)
             return MoveDirection.Up;
-        else if (dir.y < 0)
-            return MoveDirection.Down;
         else
-            return MoveDirection.None;
+            return MoveDirection.Down;
     }
 
     public List<Vector3Int> GetFrontCellPosition(int xRange, int yRange)
@@ -97,7 +98,7 @@ public class CreatureController : MonoBehaviour
 
         for(int i = 1; i <= xRange; i++)
         {
-            switch (lastDir)
+            switch (Dir)
             {
                 case MoveDirection.Up:
                     _cellPos += Vector3Int.up;
@@ -124,7 +125,7 @@ public class CreatureController : MonoBehaviour
     {
         if(State == CreatureState.Idle)
         {
-            switch (lastDir)
+            switch (Dir)
             {
                 case MoveDirection.Up:
                     anim.Play("idle_back");
@@ -168,7 +169,7 @@ public class CreatureController : MonoBehaviour
         }
         else if(State == CreatureState.Skill)
         {
-            switch (lastDir)
+            switch (Dir)
             {
                 case MoveDirection.Up:
                     anim.Play("attack_back");
@@ -212,8 +213,7 @@ public class CreatureController : MonoBehaviour
         transform.position = _pos;
 
         State = CreatureState.Idle;
-        Dir = MoveDirection.None;
-        CellPosition = new Vector3Int(0, 0, 0);
+        Dir = MoveDirection.Down;
         UpdateAnimation();
     }
 

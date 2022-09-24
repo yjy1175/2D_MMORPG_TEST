@@ -38,6 +38,6 @@ class PacketHandler
 		if (room == null)
 			return;
 
-
+		room.HandleSkill(player, skillPacket);
 	}
 }

@@ -6,6 +6,7 @@ using static Define;
 
 public class MyPlayerController : PlayerController
 {
+    bool moveKeyPressed = false;
     protected override void Init()
     {
         base.Init();
@@ -28,22 +29,37 @@ public class MyPlayerController : PlayerController
 
     protected override void UpdateIdle()
     {
-        if (Dir != MoveDirection.None)
+        if (moveKeyPressed)
         {
             State = CreatureState.Moving;
             return;
         }
 
-        if (Input.GetKey(KeyCode.LeftControl))
+        if (coSkillCoolTime == null && Input.GetKey(KeyCode.LeftControl))
         {
-            State = CreatureState.Skill;
-            coSkill = StartCoroutine("CoStartPunch");
+            C_Skill skill = new C_Skill() { Info = new SkillInfo() };
+            skill.Info.SkillId = 1;
+
+            Managers.NetWork.Send(skill);
+
+            coSkillCoolTime = StartCoroutine("CoSkillCoolTime", 0.2f);
         }
-        else if (Input.GetKey(KeyCode.LeftShift))
+        else if (coSkillCoolTime == null && Input.GetKey(KeyCode.LeftShift))
         {
-            State = CreatureState.Skill;
-            coSkill = StartCoroutine("CoStartShootArrow");
+            C_Skill skill = new C_Skill() { Info = new SkillInfo() };
+            skill.Info.SkillId = 2;
+
+            Managers.NetWork.Send(skill);
+
+            coSkillCoolTime = StartCoroutine("CoSkillCoolTime", 0.2f);
         }
+    }
+
+    Coroutine coSkillCoolTime;
+    IEnumerator CoSkillCoolTime(float time)
+    {
+        yield return new WaitForSeconds(time);
+        coSkillCoolTime = null;
     }
 
     private void LateUpdate()
@@ -53,6 +69,8 @@ public class MyPlayerController : PlayerController
 
     private void GetDirInput()
     {
+        moveKeyPressed = true;
+
         if (Input.GetKey(KeyCode.UpArrow))
         {
             Dir = MoveDirection.Up;
@@ -71,13 +89,13 @@ public class MyPlayerController : PlayerController
         }
         else
         {
-            Dir = MoveDirection.None;
+            moveKeyPressed = false;
         }
     }
 
     protected override void MoveToNextPos()
     {
-        if (Dir == MoveDirection.None)
+        if (moveKeyPressed == false)
         {
             State = CreatureState.Idle;
             CheckUpdatedFlag();
@@ -112,7 +130,7 @@ public class MyPlayerController : PlayerController
         CheckUpdatedFlag();
     }
 
-    private void CheckUpdatedFlag()
+    protected override void CheckUpdatedFlag()
     {
         if (updated)
         {

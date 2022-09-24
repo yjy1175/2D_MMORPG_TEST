@@ -20,6 +20,7 @@ public class ObjectManager
             MyPlayer = _go.GetComponent<MyPlayerController>();
             MyPlayer.id = info.PlayerId;
             MyPlayer.PosInfo = info.PosInfo;
+            MyPlayer.SyncPos();
         }
         else
         {
@@ -30,6 +31,7 @@ public class ObjectManager
             PlayerController _player = _go.GetComponent<PlayerController>();
             _player.id = info.PlayerId;
             _player.PosInfo = info.PosInfo;
+            _player.SyncPos();
         }
     }
     public void Remove(int id)
