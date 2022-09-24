@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Google.Protobuf;
 using Google.Protobuf.Protocol;
 
 namespace Server.Game
@@ -81,6 +82,39 @@ namespace Server.Game
                             p.Session.Send(despawnPacket);
                     }
                 }
+            }
+        }
+        // 뿌려주기
+        public void Broadcast(IMessage packet)
+        {
+            lock (_lock)
+            {
+                foreach (Player p in _players)
+                {
+                    S_Move movePacket = packet as S_Move;
+                    if (p.Info.PlayerId != movePacket.PlayerId)
+                        p.Session.Send(packet);
+                }
+            }
+        }
+        // 이동 동기화
+        public void HandleMove(Player player, C_Move movePacket)
+        {
+            if (player == null)
+                return;
+
+            lock (_lock)
+            {
+                // 좌표이동
+                PlayerInfo info = player.Info;
+                info.PosInfo = movePacket.PosInfo;
+
+                // 브로드캐스팅
+                S_Move resMovePacket = new S_Move();
+                resMovePacket.PlayerId = player.Info.PlayerId;
+                resMovePacket.PosInfo = movePacket.PosInfo;
+
+                Broadcast(resMovePacket);
             }
         }
     }

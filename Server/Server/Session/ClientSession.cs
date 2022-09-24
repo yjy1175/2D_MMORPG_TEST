@@ -40,8 +40,10 @@ namespace Server
 			MyPlayer = PlayerManager.Instance.Add();
             {
 				MyPlayer.Info.Name = $"Player_{MyPlayer.Info.PlayerId}";
-				MyPlayer.Info.PosX = 0;
-				MyPlayer.Info.PosY = 0;
+				MyPlayer.Info.PosInfo.State = CreatureState.Idle;
+				MyPlayer.Info.PosInfo.MoveDir = MoveDirection.None;
+				MyPlayer.Info.PosInfo.PosX = 0;
+				MyPlayer.Info.PosInfo.PosY = 0;
 				MyPlayer.Session = this;
 			}
 
@@ -50,7 +52,7 @@ namespace Server
 
 		public override void OnRecvPacket(ArraySegment<byte> buffer)
 		{
-			//PacketManager.Instance.OnRecvPacket(this, buffer);
+			PacketManager.Instance.OnRecvPacket(this, buffer);
 		}
 
 		public override void OnDisconnected(EndPoint endPoint)

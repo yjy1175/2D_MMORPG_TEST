@@ -19,7 +19,7 @@ public class ObjectManager
 
             MyPlayer = _go.GetComponent<MyPlayerController>();
             MyPlayer.id = info.PlayerId;
-            MyPlayer.CellPosition = new Vector3Int(info.PosX, info.PosY, 0);
+            MyPlayer.PosInfo = info.PosInfo;
         }
         else
         {
@@ -29,18 +29,17 @@ public class ObjectManager
 
             PlayerController _player = _go.GetComponent<PlayerController>();
             _player.id = info.PlayerId;
-            _player.CellPosition = new Vector3Int(info.PosX, info.PosY, 0);
+            _player.PosInfo = info.PosInfo;
         }
     }
-
-    public void Add(int id, GameObject go)
-    {
-        objects.Add(id, go);
-    }
-
     public void Remove(int id)
     {
+        GameObject go = Find(id);
+        if (go == null)
+            return;
+
         objects.Remove(id);
+        Managers.Resource.Destroy(go);
     }
 
     public void RemoveMyPlayer()
@@ -86,6 +85,13 @@ public class ObjectManager
         return objs;
     }
 
+    public GameObject Find(int id)
+    {
+        GameObject go = null;
+        objects.TryGetValue(id, out go);
+        return go;
+    }
+
     public GameObject Find(Func<GameObject, bool> condition)
     {
         foreach (GameObject obj in objects.Values)
@@ -99,6 +105,10 @@ public class ObjectManager
 
     public void Clear()
     {
+        foreach (GameObject obj in objects.Values)
+        {
+            Managers.Resource.Destroy(obj);
+        }
         objects.Clear();
     }
 }

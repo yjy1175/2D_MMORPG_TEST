@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Google.Protobuf.Protocol;
 using UnityEngine;
 using static Define;
 
@@ -71,6 +72,54 @@ public class MyPlayerController : PlayerController
         else
         {
             Dir = MoveDirection.None;
+        }
+    }
+
+    protected override void MoveToNextPos()
+    {
+        if (Dir == MoveDirection.None)
+        {
+            State = CreatureState.Idle;
+            CheckUpdatedFlag();
+            return;
+        }
+
+        Vector3Int destPos = CellPosition;
+        switch (Dir)
+        {
+            case MoveDirection.Up:
+                destPos += Vector3Int.up;
+                break;
+            case MoveDirection.Down:
+                destPos += Vector3Int.down;
+                break;
+            case MoveDirection.Left:
+                destPos += Vector3Int.left;
+                break;
+            case MoveDirection.Right:
+                destPos += Vector3Int.right;
+                break;
+        }
+
+        if (Managers.Map.CanGo(destPos))
+        {
+            if (Managers.Obj.Find(destPos) == null)
+            {
+                CellPosition = destPos;
+            }
+        }
+
+        CheckUpdatedFlag();
+    }
+
+    private void CheckUpdatedFlag()
+    {
+        if (updated)
+        {
+            C_Move movePacket = new C_Move();
+            movePacket.PosInfo = PosInfo;
+            Managers.NetWork.Send(movePacket);
+            updated = false;
         }
     }
 }

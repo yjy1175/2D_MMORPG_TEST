@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Google.Protobuf.Protocol;
 using UnityEngine;
 using static Define;
 
@@ -38,7 +39,7 @@ public class ArrowController : CreatureController
     protected override void MoveToNextPos()
     {
         Vector3Int destPos = CellPosition;
-        switch (dir)
+        switch (Dir)
         {
             case MoveDirection.Up:
                 destPos += Vector3Int.up;
